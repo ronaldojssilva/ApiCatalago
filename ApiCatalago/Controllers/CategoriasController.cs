@@ -26,18 +26,34 @@ namespace ApiCatalago.Controllers
         [HttpGet]
         public  ActionResult<IEnumerable<Categoria>> Get()
         {
-            return _context.Categorias.ToList();
+            try
+            {
+                throw new DataMisalignedException();
+                //return _context.Categorias.AsNoTracking().ToList();
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a sua solicitação.");
+            }
         }
 
         [HttpGet("{id:int}", Name = "ObterCategoria")]
         public ActionResult<Categoria> Get(int id)
         {
-            var categoria = _context.Categorias.FirstOrDefault(p => p.CategoriaId == id);
-            if (categoria is null)
+            try
             {
-                return NotFound("Categoria não encontrada...");
+                var categoria = _context.Categorias.FirstOrDefault(p => p.CategoriaId == id);
+                if (categoria is null)
+                {
+                    return NotFound("Categoria não encontrada...");
+                }
+                return categoria;
             }
-            return categoria;
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a sua solicitação.");
+            }
         }
 
 
@@ -46,7 +62,7 @@ namespace ApiCatalago.Controllers
         {
             if (categoria is null)
             {
-                return BadRequest();
+                return BadRequest("Dados inválidos!");
             }
 
             _context.Categorias.Add(categoria);
@@ -61,7 +77,7 @@ namespace ApiCatalago.Controllers
         {
             if (id != categoria.CategoriaId)
             {
-                return BadRequest();
+                return BadRequest("Dados inválidos!");
 
             }
             _context.Entry(categoria).State = EntityState.Modified;
@@ -77,7 +93,7 @@ namespace ApiCatalago.Controllers
 
             if (categoria is null)
             {
-                return NotFound("Categoria não encontrada...");
+                return NotFound($"Categoria com id {id} não encontrada...");
             }
             _context.Categorias.Remove(categoria);
             _context.SaveChanges();
